@@ -1,14 +1,35 @@
 <script>
 	// @ts-nocheck
 	import { onMount, afterUpdate } from 'svelte';
+	import { config } from '$lib/config';
 	import { navigating } from '$app/stores';
-
 
 	export let menu = [{ title: 'fill me', icon: 'timer', uri: '/admin' }];
 	let current_route = '';
+	let buttons_state = {};
 
+	onMount(() => {
+		loadSidebar();
+	});
+	afterUpdate(() => {
+		loadSidebar();
+	});
 
+	navigating.subscribe((value) => {
+		loadSidebar();
+	});
 
+	function loadSidebar() {
+		current_route = config.basePath + window.location.pathname.slice(0, -1);
+		menu = menu.map((item) => {
+			if (item.uri === current_route) {
+				item.active = true;
+			} else {
+				item.active = false;
+			}
+			return item;
+		});
+	}
 </script>
 
 <section>
@@ -25,10 +46,14 @@
 							<button
 								type="button"
 								class="flex items-center w-full p-2 text-base font-medium text-gray-900 transition duration-75 rounded-lg group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-								aria-controls="dropdown-pages"
-								data-collapse-toggle="dropdown-pages-{item.title.toLowerCase()}"
+								on:click={() => {
+									if (buttons_state[item.title] === undefined) {
+										buttons_state[item.title] = false;
+									}
+									buttons_state[item.title] = !buttons_state[item.title];
+								}}
 							>
-								<ion-icon name={item.icon} class="text-2xl "></ion-icon>
+								<ion-icon name={item.icon} class="text-2xl"></ion-icon>
 
 								<span class="flex-1 ml-3 text-left whitespace-nowrap">{item.title}</span>
 								<svg
@@ -45,7 +70,7 @@
 									></path>
 								</svg>
 							</button>
-							<ul id="dropdown-pages-{item.title.toLowerCase()}" class="hidden py-2 space-y-2">
+							<ul class="{buttons_state[item.title] ? '' : 'hidden'} py-2 space-y-2">
 								{#each item.sub as sub_item}
 									<li>
 										<a
@@ -65,7 +90,7 @@
 									? 'bg-gray-100 dark:bg-gray-700'
 									: ''}"
 							>
-								<ion-icon name={item.icon} class="text-2xl "></ion-icon>
+								<ion-icon name={item.icon} class="text-2xl"></ion-icon>
 
 								<span class="ml-3">{item.title}</span>
 							</a>
